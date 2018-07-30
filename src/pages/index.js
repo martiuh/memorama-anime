@@ -31,9 +31,15 @@ class App extends React.Component {
     gamemode: 'regular',
     gamemodes: ['regular', 'tries'],
     gamewon: false,
-    cards: memoramaShuffle(),
+    cards: [],
     from: { id: null, name: null },
     to: null
+  }
+
+  componentDidMount() {
+    this.setState({
+      cards: memoramaShuffle()
+    })
   }
 
   select = ({ id, name }) => {
@@ -42,7 +48,6 @@ class App extends React.Component {
       return this.setState({ from: { id, name } })
     }
     else {
-      console.log(name);
       if (from.name === name) {
         this.setState(prev => ({
           cards: cards.map(C => {
@@ -143,4 +148,4 @@ const IndexPage = () => (
   </Layout>
 )
 
-export default IndexPage
+export default App
