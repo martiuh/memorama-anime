@@ -1,12 +1,13 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import { Link } from 'gatsby'
 
 import Layout from '../components/layout'
-import gon from '../images/gon.jpg'
-import naruto from '../images/naruto.jpg'
-import killua from '../images/killua.jpg'
-import guts from '../images/guts.jpg'
-import saitama from '../images/saitama.jpg'
+import gon from '../cards/gon.jpg'
+import naruto from '../cards/naruto.jpg'
+import killua from '../cards/killua.jpg'
+import guts from '../cards/guts.jpg'
+import saitama from '../cards/saitama.jpg'
+import back from '../images/back.jpg'
 
 import './index.css'
 
@@ -23,14 +24,14 @@ const shuffleArray = array => {
 
 const uniqueID = () => `${Math.random().toString(32).substr(3)}`
 
+const memoramaShuffle = () => shuffleArray([...mockArr, ...mockArr]).map(G => ({ name: G, src: G, id: uniqueID(), found: false }))
+
 class App extends React.Component {
   state = {
     gamemode: 'regular',
     gamemodes: ['regular', 'tries'],
-    game: {
-      mode: 'regular'
-    },
-    cards: shuffleArray([...mockArr, ...mockArr]).map(G => ({ name: G, src: G, id: uniqueID(), found: false })),
+    gamewon: false,
+    cards: memoramaShuffle(),
     from: { id: null, name: null },
     to: null
   }
@@ -41,11 +42,8 @@ class App extends React.Component {
       return this.setState({ from: { id, name } })
     }
     else {
+      console.log(name);
       if (from.name === name) {
-        const ganaste = cards.filter(({ found }) => !found).length === 2 // Encontró el par faltante y automáticamente ganó
-        if (ganaste) {
-          alert('GANASTE PERRO!!!!')
-        }
         this.setState(prev => ({
           cards: cards.map(C => {
             if (C.name === name) {
@@ -56,45 +54,85 @@ class App extends React.Component {
         }))
       }
       // Corro la animación para que se vea que se hizo el par y se bloqueé
-      return this.setState({ to: id }, () => setTimeout(() => {
-        this.setState({from: { id: null, name: null }, to: null })
-      }, 100))
-    }
-  }
+      return this.setState({ to: id }, () => {
+        const { cards } = this.state
+        let timer = 400
+        let newState = {
+          ...this.state,
+          from: {
+            id: null,
+            name: null
+          },
+          to: null
+        }
 
-  isSelected = ({ id, name, found }) => {
-    const { from, to, pairs } = this.state
-    const style = {}
-    if (id === from.id || to === id) {
-      style.filter = 'blur(2px)'
+        if (cards.filter(({ found}) => !found).length === 0) {
+          newState.gamewon = true
+          timer = 0;
+        }
+        setTimeout(() => {
+        this.setState(newState)
+      }, timer)
+      })
     }
-    if (found) {
-      style.filter = 'invert(100%)'
-    }
-    return style
   }
 
   render () {
-    const { cards, from, to } = this.state
-    console.log(cards)
+    const { cards, from, to, gamewon } = this.state
     return (
-      <main>
-        <h1>Memorama</h1>
-        <div className='memorama'>
-          {cards.map(({ name, id, found, src }) => (
-            <button
-              disabled={id === from.id || to === id || found}
-              onClick={() => this.select({ id, name })}
-              className='card'
-              key={id}>
-              <img
-              style={this.isSelected({ id, name, found })}
-                src={name}
-              />
-            </button>
-          ))}
+      <Fragment>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          {gamewon ? (
+            <div className='modal'>
+              <button
+                onClick={() => {
+                  this.setState(prev => ({
+                    cards: prev.cards.map(C => {
+                      C.found = false
+                      return C
+                    }),
+                    gamewon: false
+                  }), () => setTimeout(() => {
+                    this.setState({ cards:  memoramaShuffle() })
+                  }, 300))
+                }}
+              >
+                Reiniciar
+              </button>
+            </div>
+          ) : null}
+          <h1>Memorama</h1>
+          <div className='memorama'>
+            {cards.map(({ name, id, found, src }) => (
+              <div
+                disabled={id === from.id || to === id || found}
+                onClick={() => this.select({ id, name })}
+                className={`card ${id === from.id || to === id || found ? 'selected' : ''}`}
+                key={id}>
+                <div className='flipper'>
+                  <div className='front'>
+                    <img
+                      alt={name}
+                      src={name}
+                      />
+                  </div>
+                  <div className='back'>
+                    <img
+                      alt={back}
+                      src={back}
+                      />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </main>
+      </Fragment>
     )
   }
 }

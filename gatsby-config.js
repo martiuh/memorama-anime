@@ -3,4 +3,5 @@ module.exports = {
     title: 'Memorama por Martiuh',
   },
   plugins: ['gatsby-plugin-react-helmet'],
+  pathPrefix: `/memorama`
 }
